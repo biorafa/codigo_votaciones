@@ -1,5 +1,5 @@
 import pandas as pd
-import uuid
+import random
 import smtplib
 import os
 from email.mime.text import MIMEText
@@ -12,15 +12,32 @@ EMAIL_SENDER = ""
 EMAIL_PASSWORD = ""
 
 # Archivos CSV
-INPUT_CSV = "correos.csv"
-OUTPUT_CODES_CSV = "codigos_generados.csv"
+INPUT_CSV = "correos.csv"  # Lista de correos
+PRINCIPIOS_CSV = "principios_activos.csv"  # Lista de principios activos
+OUTPUT_CODES_CSV = "codigos_generados.csv"  # Códigos generados
+
+# Cargar lista de principios activos desde un archivo CSV
+df_principios = pd.read_csv(PRINCIPIOS_CSV)
+principios_activos = df_principios["principio_activo"].drop_duplicates().tolist()
 
 # Leer y procesar correos
 df = pd.read_csv(INPUT_CSV)
 emails = df["email"].drop_duplicates().tolist()
 
 # Generar códigos únicos
-codes = {email: str(uuid.uuid4()) for email in emails}
+codes = {}
+used_codes = set()  # Para evitar duplicados
+
+for email in emails:
+    while True:
+        principio = random.choice(principios_activos)  # Elegir un principio activo al azar
+        numero = random.randint(1000, 9999)  # Generar número de 4 dígitos
+        codigo = f"{principio}{numero}"  # Formato del código
+
+        if codigo not in used_codes:  # Asegurar que sea único
+            used_codes.add(codigo)
+            codes[email] = codigo
+            break
 
 # Guardar códigos sin relación con los correos
 df_codes = pd.DataFrame({"codigo": list(codes.values())})
